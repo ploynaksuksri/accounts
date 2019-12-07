@@ -10,16 +10,13 @@ namespace accounts.core
     public class AccountManager : IAccountManager
     {
         private IAccountRepository _accountRepo;
-        private IRepository<Transaction> _transactionRepo;
-        private IFeeCalculator _feeCalculator;
+        private ITransactionManager _transactionManager;
 
-        public AccountManager(IFeeCalculator feeCalculator,
-            IAccountRepository accountRepo,
-            IRepository<Transaction> transactionRepo)
+        public AccountManager(IAccountRepository accountRepo,
+            ITransactionManager transactionManager)
         {
-            _feeCalculator = feeCalculator;
             _accountRepo = accountRepo;
-            _transactionRepo = transactionRepo;
+            _transactionManager = transactionManager;
         }
 
         public Account CreateAccount(Account account)
@@ -29,49 +26,36 @@ namespace accounts.core
 
         public Account Deposit(AccountDepositDto depositDto)
         {
-            Transaction transaction = new Transaction()
-            {
-                TransactionType = TransactionTypeEnum.Deposit,
-                AccountId = depositDto.ToAccount.Id,
-                OriginalAmount = depositDto.Amount,
-                Fee = _feeCalculator.CalculateDepositFee(depositDto.Amount)
-            };
-            transaction.NetAmount = transaction.OriginalAmount - transaction.Fee;
-            _transactionRepo.Add(transaction);
-
-            depositDto.ToAccount.Balance += transaction.NetAmount;
-            _accountRepo.Update(depositDto.ToAccount);
-            return depositDto.ToAccount;
+            var account = GetAccount(depositDto.AccountId);
+            var transaction = _transactionManager.Deposit(depositDto);
+            account.Balance += transaction.NetAmount;
+            _accountRepo.Update(account);
+            return account;
         }
 
         public Account Transfer(AccountTransferDto transferDto)
         {
-            // Add transfer record for FromAccount
+            // Transfer
+            _transactionManager.Transfer(transferDto);
             transferDto.FromAccount.Balance -= transferDto.Amount;
             _accountRepo.Update(transferDto.FromAccount);
-            _transactionRepo.Add(new Transaction
-            {
-                TransactionType = TransactionTypeEnum.Transfer,
-                AccountId = transferDto.FromAccount.Id,
-                AssociatedAccountId = transferDto.ToAccount.Id,
-                OriginalAmount = transferDto.Amount,
-                NetAmount = transferDto.Amount,
-                Fee = 0.0m
-            });
-
-            // Add received record for ToAccount
+            
+            // Receive
+            _transactionManager.Receive(transferDto);
             transferDto.ToAccount.Balance += transferDto.Amount;
             _accountRepo.Update(transferDto.ToAccount);
-            _transactionRepo.Add(new Transaction
-            {
-                TransactionType = TransactionTypeEnum.Received,
-                AccountId = transferDto.ToAccount.Id,
-                AssociatedAccountId = transferDto.FromAccount.Id,
-                OriginalAmount = transferDto.Amount,
-                NetAmount = transferDto.Amount,
-                Fee = 0.0m
-            });
+
             return transferDto.FromAccount;
+        }
+
+        private Account GetAccount(int id)
+        {
+            var account = _accountRepo.Get(id);
+            if (account == null)
+            {
+                throw new Exception("Account is not found.");
+            }
+            return account;
         }
     }
 

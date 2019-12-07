@@ -13,6 +13,6 @@ namespace accounts.DAL.models
     {
         Deposit = 1,
         Transfer = 2,
-        Received = 3
+        Receive = 3
     }
 }

@@ -14,13 +14,14 @@ namespace accounts.test
         private IFeeCalculator _feeCalculator;
         private IAccountRepository _accountRepo;
         private IRepository<Transaction> _transactionRepo;
+        private ITransactionManager _transactionManager;
 
         public AccountManagerTest()
         {
             _feeCalculator = new DefaultFeeCalculator();
             _accountRepo = new AccountRepository();
             _transactionRepo = new Repository<Transaction>();
-            _accountManager = new AccountManager(_feeCalculator, _accountRepo, _transactionRepo);
+            _accountManager = new AccountManager(_accountRepo, new TransactionManager(_feeCalculator, _transactionRepo));
            
         }
 
@@ -30,6 +31,7 @@ namespace accounts.test
             var accountNo = "NL61INGB3175229417";
             var account = new Account()
             {
+                Id = 1,
                 AccountNo = accountNo,
                 Balance = 0.0m
             };
@@ -47,6 +49,7 @@ namespace accounts.test
             var accountNo = "NL61INGB3175229417";
             var account = new Account()
             {
+                Id = 1,
                 AccountNo = accountNo,
                 Balance = 1000m
             };
@@ -54,7 +57,7 @@ namespace accounts.test
 
             var depositInfo = new AccountDepositDto
             {
-                ToAccount = account,
+                AccountId = 2,
                 Amount = 1000m,
                 TransactionType = TransactionTypeEnum.Deposit
             };
