@@ -9,12 +9,8 @@ namespace accounts.DAL.repositories
     public class Repository<TEntity> : IRepository<TEntity> 
         where TEntity: class
     {
-        private List<TEntity> _list = new List<TEntity>();
+        protected List<TEntity> _list = new List<TEntity>();
 
-        public void Add(TEntity obj)
-        {
-            _list.Add(obj);
-        }
 
         public void Deleted(TEntity obj)
         {
@@ -40,9 +36,15 @@ namespace accounts.DAL.repositories
             throw new NotImplementedException();
         }
 
-        public void Update(TEntity obj)
+        public virtual void Update(TEntity obj)
         {
             throw new NotImplementedException();
+        }
+
+        TEntity IRepository<TEntity>.Add(TEntity obj)
+        {
+            _list.Add(obj);
+            return obj;
         }
     }
 }

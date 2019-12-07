@@ -5,7 +5,7 @@
         public const decimal DepositFeePercent = 0.1m;
         public decimal CalculateDepositFee(decimal amount)
         {
-            return amount * DepositFeePercent;
+            return (amount * DepositFeePercent) / 100;
         }
     }
 

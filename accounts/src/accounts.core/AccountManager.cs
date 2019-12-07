@@ -7,14 +7,14 @@ using System.Text;
 
 namespace accounts.core
 {
-    public class AccountManager
+    public class AccountManager : IAccountManager
     {
-        private IRepository<Account> _accountRepo;
+        private IAccountRepository _accountRepo;
         private IRepository<Transaction> _transactionRepo;
         private IFeeCalculator _feeCalculator;
 
         public AccountManager(IFeeCalculator feeCalculator,
-            IRepository<Account> accountRepo,
+            IAccountRepository accountRepo,
             IRepository<Transaction> transactionRepo)
         {
             _feeCalculator = feeCalculator;
@@ -27,51 +27,51 @@ namespace accounts.core
             return _accountRepo.Add(account);
         }
 
-        public Account Deposit(AccountDepositDto depositInfo)
+        public Account Deposit(AccountDepositDto depositDto)
         {
             Transaction transaction = new Transaction()
             {
                 TransactionType = TransactionTypeEnum.Deposit,
-                AccountId = depositInfo.ToAccount.Id,
-                OriginalAmount = depositInfo.Amount,
-                Fee = _feeCalculator.CalculateDepositFee(depositInfo.Amount)
+                AccountId = depositDto.ToAccount.Id,
+                OriginalAmount = depositDto.Amount,
+                Fee = _feeCalculator.CalculateDepositFee(depositDto.Amount)
             };
             transaction.NetAmount = transaction.OriginalAmount - transaction.Fee;
             _transactionRepo.Add(transaction);
 
-            depositInfo.ToAccount.Balance += transaction.NetAmount;
-            _accountRepo.Update(depositInfo.ToAccount);
-            return depositInfo.ToAccount;
+            depositDto.ToAccount.Balance += transaction.NetAmount;
+            _accountRepo.Update(depositDto.ToAccount);
+            return depositDto.ToAccount;
         }
 
-        public Account Transfer(AccountTransferDto transferInfo)
+        public Account Transfer(AccountTransferDto transferDto)
         {
             // Add transfer record for FromAccount
-            transferInfo.FromAccount.Balance -= transferInfo.Amount;
-            _accountRepo.Update(transferInfo.FromAccount);
+            transferDto.FromAccount.Balance -= transferDto.Amount;
+            _accountRepo.Update(transferDto.FromAccount);
             _transactionRepo.Add(new Transaction
             {
                 TransactionType = TransactionTypeEnum.Transfer,
-                AccountId = transferInfo.FromAccount.Id,
-                AssociatedAccountId = transferInfo.ToAccount.Id,
-                OriginalAmount = transferInfo.Amount,
-                NetAmount = transferInfo.Amount,
+                AccountId = transferDto.FromAccount.Id,
+                AssociatedAccountId = transferDto.ToAccount.Id,
+                OriginalAmount = transferDto.Amount,
+                NetAmount = transferDto.Amount,
                 Fee = 0.0m
             });
 
             // Add received record for ToAccount
-            transferInfo.ToAccount.Balance += transferInfo.Amount;
-            _accountRepo.Update(transferInfo.ToAccount);
+            transferDto.ToAccount.Balance += transferDto.Amount;
+            _accountRepo.Update(transferDto.ToAccount);
             _transactionRepo.Add(new Transaction
             {
                 TransactionType = TransactionTypeEnum.Received,
-                AccountId = transferInfo.ToAccount.Id,
-                AssociatedAccountId = transferInfo.FromAccount.Id,
-                OriginalAmount = transferInfo.Amount,
-                NetAmount = transferInfo.Amount,
+                AccountId = transferDto.ToAccount.Id,
+                AssociatedAccountId = transferDto.FromAccount.Id,
+                OriginalAmount = transferDto.Amount,
+                NetAmount = transferDto.Amount,
                 Fee = 0.0m
             });
-            return transferInfo.FromAccount;
+            return transferDto.FromAccount;
         }
     }
 
