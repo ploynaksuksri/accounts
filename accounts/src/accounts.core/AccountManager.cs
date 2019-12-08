@@ -19,6 +19,11 @@ namespace accounts.core
             _transactionManager = transactionManager;
         }
 
+        public IEnumerable<Account> GetAll()
+        {
+            return _accountRepo.GetAll();
+        }
+
         public Account CreateAccount(Account account)
         {
             return _accountRepo.Add(account);
