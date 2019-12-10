@@ -8,6 +8,12 @@ namespace accounts.DAL.repositories
 {
     public class AccountRepository : Repository<Account>, IAccountRepository
     {
+
+        public AccountRepository(AccountDbContext dbContext) : base(dbContext)
+        {
+
+        }
+
         public Account Get(string accountNo)
         {
             return _list.Find(e => e.AccountNo == accountNo);

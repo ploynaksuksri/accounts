@@ -10,7 +10,12 @@ namespace accounts.DAL.repositories
         where TEntity: class
     {
         protected List<TEntity> _list = new List<TEntity>();
+        protected AccountDbContext _dbContext;
 
+        public Repository(AccountDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
 
         public void Deleted(TEntity obj)
         {
@@ -28,7 +33,7 @@ namespace accounts.DAL.repositories
 
         public IEnumerable<TEntity> GetAll()
         {
-            return _list;
+            return _dbContext.Set<TEntity>();
         }
 
         public void SaveChanges()
@@ -43,7 +48,8 @@ namespace accounts.DAL.repositories
 
         TEntity IRepository<TEntity>.Add(TEntity obj)
         {
-            _list.Add(obj);
+            _dbContext.Set<TEntity>().Add(obj);
+            _dbContext.SaveChanges();
             return obj;
         }
     }

@@ -8,6 +8,7 @@ namespace accounts.core
 {
     public interface IAccountManager
     {
+        IEnumerable<Account> GetAll();
         Account CreateAccount(Account account);
         Account Deposit(AccountDepositDto depositDto);
         Account Transfer(AccountTransferDto transferDto);

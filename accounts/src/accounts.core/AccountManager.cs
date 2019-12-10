@@ -1,9 +1,8 @@
-﻿using accounts.DAL.models;
+﻿using accounts.core.Dto;
+using accounts.DAL.models;
 using accounts.DAL.repositories;
-using accounts.core.Dto;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace accounts.core
 {
@@ -31,7 +30,8 @@ namespace accounts.core
 
         public Account Deposit(AccountDepositDto depositDto)
         {
-            var account = GetAccount(depositDto.AccountId);
+            var account = GetAccount(depositDto.AccountNo);
+            depositDto.AccountId = account.Id;
             var transaction = _transactionManager.Deposit(depositDto);
             account.Balance += transaction.NetAmount;
             _accountRepo.Update(account);
@@ -39,7 +39,12 @@ namespace accounts.core
         }
 
         public Account Transfer(AccountTransferDto transferDto)
-        {
+        {          
+            if (!IsTransferable(transferDto.FromAccount.AccountNo, transferDto.Amount))
+            {
+                throw new Exception($"Account no. {transferDto.FromAccount.AccountNo}'s balance is insufficient.");
+            }
+
             // Transfer
             _transactionManager.Transfer(transferDto);
             transferDto.FromAccount.Balance -= transferDto.Amount;
@@ -61,6 +66,24 @@ namespace accounts.core
                 throw new Exception("Account is not found.");
             }
             return account;
+        }
+
+        private Account GetAccount(string accountNo)
+        {
+            var account = _accountRepo.Get(accountNo);
+            if (account == null)
+            {
+                throw new Exception("Account is not found.");
+            }
+            return account;
+        }
+
+        private bool IsTransferable(string accountNo, decimal amount)
+        {
+            var account = GetAccount(accountNo);
+
+            return account.Balance >= amount;
+            
         }
     }
 
