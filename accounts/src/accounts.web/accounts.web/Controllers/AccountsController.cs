@@ -38,13 +38,13 @@ namespace accounts.web.Controllers
 
         // POST: api/Accounts
         [HttpPost]
-        public IActionResult Post(string accountNo)
+        public IActionResult Create(string accountNo)
         {
-            //if (string.IsNullOrEmpty(accountNo))
-            //    return BadRequest("Account no is empty.");
+            if (string.IsNullOrEmpty(accountNo))
+                return BadRequest("Account no is empty.");
 
-            //if (accountNo.Length != AccountNoLength)
-            //    return BadRequest("Account no is invalid.");
+            if (accountNo.Length != AccountNoLength)
+                return BadRequest("Account no is invalid.");
 
             Account account = new Account
             {
@@ -57,6 +57,10 @@ namespace accounts.web.Controllers
         [HttpPost("[action]")]
         public IActionResult Deposit(AccountDepositDto depositDto)
         {
+            if (depositDto.Amount <= 0)
+            {
+                return BadRequest("Deposit amount cannot be zero.");
+            }
             _accountManager.Deposit(depositDto);
             return Ok();
         }
@@ -64,9 +68,15 @@ namespace accounts.web.Controllers
         [HttpPost("[action]")]
         public IActionResult Transfer(AccountTransferDto transferDto)
         {
+            if (transferDto.Amount <= 0)
+            {
+                return BadRequest("Transfer amound cannot be zero.");
+            }
             _accountManager.Transfer(transferDto);
             return Ok();
         }
+
+
 
         // PUT: api/Accounts/5
         [HttpPut("{id}")]

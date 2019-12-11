@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace accounts.DAL.repositories
 {
@@ -16,19 +17,25 @@ namespace accounts.DAL.repositories
 
         public Account Get(string accountNo)
         {
-            return _list.Find(e => e.AccountNo == accountNo);
+            return _dbContext.Accounts.FirstOrDefault(e => e.AccountNo == accountNo && e.IsDeleted == false);
+        }
+
+        public bool IsAccountNoAvailable(string accountNo)
+        {
+            var account = Get(accountNo);
+            return account == null;
         }
 
         public override void Update(Account obj)
         {
-            var account = Get(obj.AccountNo);
-            _list.Remove(account);
-            _list.Add(obj);
+            _dbContext.Entry(obj).State = EntityState.Modified;
+            _dbContext.SaveChanges();
         }
     }
 
     public interface IAccountRepository : IRepository<Account>
     {
         Account Get(string accountNo);
+        bool IsAccountNoAvailable(string accountNo);
     }
 }

@@ -25,6 +25,10 @@ namespace accounts.core
 
         public Account CreateAccount(Account account)
         {
+            if (!IsAccountNoAvailable(account.AccountNo))
+            {
+                throw new Exception($"Account no. {account.AccountNo} is not available.");
+            }
             return _accountRepo.Add(account);
         }
 
@@ -40,9 +44,9 @@ namespace accounts.core
 
         public Account Transfer(AccountTransferDto transferDto)
         {          
-            if (!IsTransferable(transferDto.FromAccount.AccountNo, transferDto.Amount))
+            if (!IsTransferable(transferDto))
             {
-                throw new Exception($"Account no. {transferDto.FromAccount.AccountNo}'s balance is insufficient.");
+                throw new Exception($"Account no. {transferDto.FromAccountNo} doesn't have sufficient balance.");
             }
 
             // Transfer
@@ -58,18 +62,14 @@ namespace accounts.core
             return transferDto.FromAccount;
         }
 
-        private Account GetAccount(int id)
-        {
-            var account = _accountRepo.Get(id);
-            if (account == null)
-            {
-                throw new Exception("Account is not found.");
-            }
-            return account;
-        }
 
         private Account GetAccount(string accountNo)
         {
+            if (string.IsNullOrEmpty(accountNo))
+            {
+                throw new Exception("Account No is empty.");
+            }
+
             var account = _accountRepo.Get(accountNo);
             if (account == null)
             {
@@ -78,15 +78,24 @@ namespace accounts.core
             return account;
         }
 
-        private bool IsTransferable(string accountNo, decimal amount)
-        {
-            var account = GetAccount(accountNo);
 
-            return account.Balance >= amount;
-            
+        private bool IsTransferable(AccountTransferDto transferDto)
+        {
+            if (transferDto.Amount <= 0)
+                return false;
+
+            transferDto.FromAccount = GetAccount(transferDto.FromAccountNo);
+            transferDto.ToAccount = GetAccount(transferDto.ToAccountNo);
+            return transferDto.FromAccount.Balance >= transferDto.Amount;
         }
+
+        private bool IsAccountNoAvailable(string accountNo)
+        {
+            return _accountRepo.IsAccountNoAvailable(accountNo);
+        }
+
     }
 
-   
-   
+
+
 }
