@@ -46,7 +46,7 @@ namespace accounts.core
         {          
             if (!IsTransferable(transferDto))
             {
-                throw new Exception($"Account no. {transferDto.FromAccountNo} doesn't have sufficient balance.");
+                throw new Exception($"Account doesn't have sufficient balance.");
             }
 
             // Transfer
